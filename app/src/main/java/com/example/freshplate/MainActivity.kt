@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
             FreshPlateTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android",
+                        name = "Francesco & Valerio",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
