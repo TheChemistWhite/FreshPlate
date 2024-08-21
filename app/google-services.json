@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "892624271852",
+    "project_id": "freshplate-8a008",
+    "storage_bucket": "freshplate-8a008.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:892624271852:android:72ded96ca179c48e6828c9",
+        "android_client_info": {
+          "package_name": "com.example.freshplate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIDEZNWQuxM2sZBio9kRPHnHD14rhTSmg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
