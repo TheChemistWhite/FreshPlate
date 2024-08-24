@@ -1,26 +1,53 @@
 package com.example.freshplate.pages
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.freshplate.R
+import com.example.freshplate.authentication.AuthState
+import com.example.freshplate.authentication.AuthViewModel
 
 @Composable
-fun LogIn() {
+fun LogIn(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel) {
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val authState = authViewModel.authState.observeAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(authState.value){
+        when(authState.value){
+            is AuthState.Authenticated -> {
+                navController.navigate("homepage")
+            }
+            is AuthState.Error -> {
+                Toast.makeText(context, (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
+            }else -> Unit
+        }
+    }
 
     Surface(
         modifier = Modifier
@@ -60,22 +87,24 @@ fun LogIn() {
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Email input field
+                    // Email input field with icon
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
                         label = { Text("Email") },
+                        leadingIcon = { Icon(Icons.Filled.Email, contentDescription = "Email Icon") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
 
                     Spacer(modifier = Modifier.height(16.dp)) // Space between fields
 
-                    // Password input field
+                    // Password input field with icon
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
                         label = { Text("Password") },
+                        leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = "Password Icon") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation() // Hide password characters
@@ -85,20 +114,22 @@ fun LogIn() {
 
                     // Login button
                     Button(
-                        onClick = { /* Handle login */ },
+                        onClick = {
+                            authViewModel.login(email, password)
+                        },
+                        enabled = authState.value != AuthState.Loading,
                         modifier = Modifier.fillMaxWidth() // Make the button stretch across the card width
                     ) {
                         Text("Log In", fontSize = 18.sp)
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp)) // Space between Login and Sign Up button
+                    Spacer(modifier = Modifier.height(16.dp)) // Space between Login and Sign Up label
 
-                    // Sign Up button
-                    Button(
-                        onClick = { /* Handle Sign Up */ },
-                        modifier = Modifier.fillMaxWidth() // Make the button stretch across the card width
-                    ) {
-                        Text("Sign Up", fontSize = 18.sp)
+                    // Clickable "Sign Up" label
+                    TextButton(onClick = {
+                        navController.navigate("signup")
+                    }){
+                        Text(text = "Don't have any account? SignUp")
                     }
                 }
             }
@@ -109,5 +140,9 @@ fun LogIn() {
 @Preview
 @Composable
 fun LogInPreview() {
-    LogIn()
+    LogIn(
+        modifier = Modifier,
+        navController = NavHostController(LocalContext.current),
+        authViewModel = AuthViewModel()
+    )
 }
