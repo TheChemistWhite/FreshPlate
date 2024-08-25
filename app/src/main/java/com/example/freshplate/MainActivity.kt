@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import com.example.freshplate.authentication.AuthViewModel
-import com.example.freshplate.pages.HomePage
+import com.example.freshplate.navbar.navigationBar
 import com.example.freshplate.ui.theme.FreshPlateTheme
 
 class MainActivity : ComponentActivity() {
@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             FreshPlateTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    HomePage(modifier =  Modifier.padding(innerPadding), authViewModel = authViewModel)
+                    navigationBar(modifier =  Modifier.padding(innerPadding), authViewModel)
                 }
             }
         }

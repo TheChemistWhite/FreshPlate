@@ -22,7 +22,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
@@ -31,79 +30,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.freshplate.authentication.AuthState
 import com.example.freshplate.authentication.AuthViewModel
 import com.example.freshplate.navbar.navItem
+import com.example.freshplate.navbar.navigationBar
 
 @Composable
 fun HomePage(modifier: Modifier = Modifier, authViewModel: AuthViewModel){
 
-    val navItemLists = listOf(
-        navItem("Home", Icons.Default.Home),
-        navItem("Profile", Icons.Default.Person),
-        navItem("Settings", Icons.Default.Settings),
-    )
-
-    var selectedIndex by remember {
-        mutableStateOf(0)
-    }
-
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        bottomBar ={
-            NavigationBar{
-                navItemLists.forEachIndexed { index, navItem ->
-                    NavigationBarItem(
-                        selected = selectedIndex == index,
-                        onClick = { selectedIndex = index },
-                        label = { Text(text = navItem.label) },
-                        icon = { Icon(imageVector = navItem.icon, contentDescription = "Icon") }
-                    )
-                }
-            }
-        }
-    ) {innerPadding ->
-        ContentScreen(modifier=Modifier.padding(innerPadding), authViewModel, selectedIndex)
-    }
-}
-
-@Composable
-fun ContentScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel, selectedIndex: Int) {
-
     val authState = authViewModel.authState.observeAsState()
-    val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "login", builder = {
-        composable("login"){
-            LogIn(modifier, navController, authViewModel)
-        }
-        composable("signup"){
-            SignUp(modifier, navController, authViewModel)
-        }
-        composable("homepage"){
-            HomePage(modifier, authViewModel)
-        }
-    })
-
-
-    LaunchedEffect(authState.value) {
-        when (authState.value) {
-            is AuthState.UnAuthenticated -> {
-                // Navigate to the login screen
-                navController.navigate("login")
-            }else -> Unit
-        }
-    }
-
-
-
-    Column(modifier = modifier) {
-        Button(
-            onClick = {
-                authViewModel.logout()
-            },
-            enabled = authState.value != AuthState.Loading,
-            modifier = Modifier.fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text("Logout", fontSize = 18.sp)
-        }
-    }
 }
