@@ -4,12 +4,20 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.StorageReference
 
 class AuthViewModel: ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val _authState = MutableLiveData<AuthState>()
     val authState: LiveData<AuthState> = _authState
+    val database: DatabaseReference = FirebaseDatabase.getInstance().reference
+    private lateinit var storageReference : StorageReference
+
+    var uid = auth.currentUser?.uid
+    var dbRef = FirebaseDatabase.getInstance().getReference("Users")
 
     init {
         checkAuthStatus()
@@ -69,7 +77,16 @@ class AuthViewModel: ViewModel() {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if(task.isSuccessful){
+                    val user = user(username, email, password)
+                    dbRef.child(uid!!).setValue(user).addOnCompleteListener {
+                        if(it.isSuccessful){
+
+                        }else{
+
+                        }
+                    }
                     _authState.value = AuthState.Authenticated
+
                 }else{
                     _authState.value = AuthState.Error(task.exception?.message ?: "Registration failed")
                 }
