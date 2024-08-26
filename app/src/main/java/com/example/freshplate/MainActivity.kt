@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import com.example.freshplate.authentication.AuthViewModel
 import com.example.freshplate.navbar.NavigationBar
 import com.example.freshplate.ui.theme.FreshPlateTheme
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 
 class MainActivity : ComponentActivity() {
 
@@ -19,7 +21,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val authViewModel : AuthViewModel by viewModels()
-
+        Firebase.firestore
         // Set up content using Compose
         setContent {
             FreshPlateTheme {
