@@ -1,23 +1,20 @@
 package com.example.freshplate.authentication
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.storage.StorageReference
+import com.google.firebase.firestore.firestore
 
 class AuthViewModel: ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val _authState = MutableLiveData<AuthState>()
     val authState: LiveData<AuthState> = _authState
-    val database: DatabaseReference = FirebaseDatabase.getInstance().reference
-    private lateinit var storageReference : StorageReference
 
-    var uid = auth.currentUser?.uid
-    var dbRef = FirebaseDatabase.getInstance().getReference("Users")
+    var db = Firebase.firestore
 
     init {
         checkAuthStatus()
@@ -73,20 +70,17 @@ class AuthViewModel: ViewModel() {
         }
 
         _authState.value = AuthState.Loading
-
+        val user = user(username, email)
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if(task.isSuccessful){
-                    val user = user(username, email, password)
-                    dbRef.child(uid!!).setValue(user).addOnCompleteListener {
-                        if(it.isSuccessful){
-
-                        }else{
-
-                        }
-                    }
                     _authState.value = AuthState.Authenticated
-
+                    db.collection("users")
+                        .add(user).addOnSuccessListener {
+                            Log.d("TAG", "User added with ID: ${it.id}")
+                        }.addOnFailureListener {
+                            Log.w("TAG", "Error adding user", it)
+                        }
                 }else{
                     _authState.value = AuthState.Error(task.exception?.message ?: "Registration failed")
                 }

@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +26,7 @@ import androidx.navigation.NavHostController
 import com.example.freshplate.R
 import com.example.freshplate.authentication.AuthState
 import com.example.freshplate.authentication.AuthViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel) {
@@ -35,6 +37,8 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
 
     val authState = authViewModel.authState.observeAsState()
     val context = LocalContext.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope() // Define coroutine scope
 
     LaunchedEffect(authState.value){
         when(authState.value){
@@ -125,7 +129,10 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
                     // Sign Up button
                     Button(
                         onClick = {
-                            authViewModel.signup(username, email, password)
+                            keyboard?.hide()
+                            coroutineScope.launch {
+                                authViewModel.signup(username, email, password)
+                            }
                         },
                         enabled = authState.value != AuthState.Loading,
                         modifier = Modifier.fillMaxWidth() // Make the button stretch across the card width

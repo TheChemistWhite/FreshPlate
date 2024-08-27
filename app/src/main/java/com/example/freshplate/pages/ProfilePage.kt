@@ -66,8 +66,8 @@ fun ProfilePage(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
                     // Assuming user has username, bio, profileImage, etc.
                     val user = snapshot.getValue(user::class.java)
                     username = user?.username ?: "John Doe"
-                    bio = user?.bio ?: "This is my bio."
-                    profileImageUrl = user?.image ?: ""
+                    //bio = user?.bio ?: "This is my bio."
+                    //profileImageUrl = user?.image ?: ""
                     // You can also update postsCount, followersCount, followingCount as needed
                 }
 
@@ -92,7 +92,9 @@ fun ProfilePage(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
         ) {
             // Profile Image
             Image(
-                painter = if (profileImageUrl.isEmpty()) painterResource(id = R.drawable.freshplate) else painterResource(id = R.drawable.freshplate),
+                painter = if (profileImageUrl.isEmpty())
+                    painterResource(id = R.drawable.freshplate)
+                else painterResource(id = R.drawable.freshplate),
                 contentDescription = "Profile Image",
                 modifier = Modifier
                     .size(80.dp)
