@@ -1,5 +1,7 @@
 package com.example.freshplate.pages
 
+import android.content.ContentValues.TAG
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -16,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -35,48 +36,36 @@ import androidx.compose.ui.unit.sp
 import com.example.freshplate.R
 import com.example.freshplate.authentication.AuthState
 import com.example.freshplate.authentication.AuthViewModel
-import com.example.freshplate.authentication.user
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 
 @Composable
 fun ProfilePage(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
 
     val authState = authViewModel.authState.observeAsState()
+    val db = Firebase.firestore
 
     // Mock data for now
-    var username by remember { mutableStateOf("John Doe") }
     var bio by remember { mutableStateOf("This is my bio.") }
     val postsCount by remember { mutableIntStateOf(10) }
     val followersCount by remember { mutableIntStateOf(250) }
     val followingCount by remember { mutableIntStateOf(180) }
-    var profileImageUrl by remember { mutableStateOf("") } // Image URL from Firebase Storage
+    var profileImageUrl by remember { mutableStateOf("") }// Image URL from Firebase Storage
+    var username by remember { mutableStateOf("") }
+    var email = Firebase.auth.currentUser?.email
 
-    LaunchedEffect(authState.value) {
-        if (authState.value == AuthState.Authenticated) {
-            // Fetch user data from Firebase when authenticated
-            val uid = FirebaseAuth.getInstance().currentUser?.uid
-            val dbRef = FirebaseDatabase.getInstance().getReference("Users").child(uid!!)
-
-            dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    // Assuming user has username, bio, profileImage, etc.
-                    val user = snapshot.getValue(user::class.java)
-                    username = user?.username ?: "John Doe"
-                    //bio = user?.bio ?: "This is my bio."
-                    //profileImageUrl = user?.image ?: ""
-                    // You can also update postsCount, followersCount, followingCount as needed
+    db.collection("users").whereEqualTo("email", email).get()
+        .addOnCompleteListener {
+            if (it.isSuccessful) {
+                for (document in it.result) {
+                    Log.d(TAG, "${document.id} => ${document.data}")
+                    username = document.data["username"].toString()
                 }
-
-                override fun onCancelled(error: DatabaseError) {
-                    // Handle error
-                }
-            })
+            }else {
+                Log.w(TAG, "Error getting documents.", it.exception)
+            }
         }
-    }
 
     Column(
         modifier = modifier
