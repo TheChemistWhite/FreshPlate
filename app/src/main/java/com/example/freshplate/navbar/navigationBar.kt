@@ -1,5 +1,7 @@
 package com.example.freshplate.navbar
 
+import android.content.ContentValues.TAG
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -26,10 +28,17 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.freshplate.authentication.AuthState
 import com.example.freshplate.authentication.AuthViewModel
+import com.example.freshplate.authentication.user
 import com.example.freshplate.pages.HomePage
 import com.example.freshplate.pages.LogIn
 import com.example.freshplate.pages.ProfilePage
 import com.example.freshplate.pages.SignUp
+import com.example.freshplate.pages.UpdatePage
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
 
 @Composable
 fun NavigationBar(modifier: Modifier, authViewModel: AuthViewModel) {
@@ -44,22 +53,39 @@ fun NavigationBar(modifier: Modifier, authViewModel: AuthViewModel) {
 
     var selectedIndex by remember { mutableIntStateOf(0) }
 
-    // Handle authentication state changes
+    val user = remember { user() }
     LaunchedEffect(authState) {
-        when (authState) {
-            is AuthState.UnAuthenticated -> {
-                // Navigate to login if the user is unauthenticated
-                navController.navigate("login") {
-                    popUpTo("login") { inclusive = true }
+        if (authState is AuthState.Authenticated) {
+            // Fetch user data from Firestore when authenticated
+            val email = FirebaseAuth.getInstance().currentUser?.email ?: return@LaunchedEffect
+            FirebaseFirestore.getInstance()
+                .collection("users")
+                .whereEqualTo("email", email)
+                .get()
+                .addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        for (document in it.result) {
+                            Log.d(TAG, "UserData: ${document.id} => ${document.data}")
+                            user.apply {
+                                name = document.getString("name") ?: ""
+                                surname = document.getString("surname") ?: ""
+                                username = document.getString("username") ?: ""
+                                bio = document.getString("bio") ?: ""
+                                image = document.getString("image") ?: ""
+                                posts = document.get("posts") as? List<String>
+                                followers = document.get("followers") as? List<String>
+                                following = document.get("following") as? List<String>
+                            }
+                            user.email = email
+                        }
+                    } else {
+                        Log.w(TAG, "Error getting documents.", it.exception)
+                    }
                 }
+        } else {
+            navController.navigate("login") {
+                popUpTo("login") { inclusive = true }
             }
-            is AuthState.Authenticated -> {
-                // Ensure we navigate to the homepage after login
-                navController.navigate("homepage") {
-                    popUpTo("login") { inclusive = true }
-                }
-            }
-            else -> Unit
         }
     }
 
@@ -77,7 +103,7 @@ fun NavigationBar(modifier: Modifier, authViewModel: AuthViewModel) {
                                 // Only navigate if the destination exists
                                 when (index) {
                                     0 -> navController.navigate("homepage")
-                                    1 -> navController.navigate("settings")
+                                    1 -> navController.navigate("profile")
                                     2 -> navController.navigate("profile")
 
                                     else -> Unit
@@ -106,19 +132,18 @@ fun NavigationBar(modifier: Modifier, authViewModel: AuthViewModel) {
                 HomePage(modifier = Modifier, authViewModel = authViewModel)
             }
             composable("profile") {
-                ProfilePage(modifier = Modifier, authViewModel = authViewModel)
+                ProfilePage(user = user, modifier = Modifier, navController = navController,authViewModel = authViewModel)
             }
-            composable("settings") {
-                // Add your Settings page here
+            composable("update") {
+                UpdatePage(user = user, modifier = Modifier, navController = navController, authViewModel = authViewModel)
             }
         }
     }
 }
 
-
 @Preview
 @Composable
-fun NavigationBarPreview(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel, selectedIndex: Int) {
+fun NavigationBarPreview(user: user, modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel, selectedIndex: Int) {
     val authState = authViewModel.authState.observeAsState()
 
     LaunchedEffect(authState.value) {
@@ -132,8 +157,8 @@ fun NavigationBarPreview(modifier: Modifier = Modifier, navController: NavHostCo
     if (authState.value == AuthState.Authenticated) {
         when (selectedIndex) {
             0 -> HomePage(modifier, authViewModel)
-            1 -> ProfilePage(modifier, authViewModel)
-            2 -> ProfilePage(modifier, authViewModel)
+            1 -> ProfilePage(user, modifier, navController, authViewModel)
+            2 -> ProfilePage(user, modifier, navController, authViewModel)
         }
     }
 }

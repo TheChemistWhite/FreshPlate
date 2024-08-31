@@ -1,58 +1,59 @@
 package com.example.freshplate.pages
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.freshplate.R
 import com.example.freshplate.authentication.AuthState
 import com.example.freshplate.authentication.AuthViewModel
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
+import com.example.freshplate.authentication.user
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel) {
+fun UpdatePage(user: user, modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel){
 
     var name by remember { mutableStateOf("") }
     var surname by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var bio by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
 
     val authState = authViewModel.authState.observeAsState()
-    val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope() // Define coroutine scope
-
-    LaunchedEffect(authState.value){
-        when(authState.value){
-            is AuthState.Authenticated -> {
-                navController.navigate("homepage")
-            }
-            is AuthState.Error -> {
-                Toast.makeText(context, (authState.value as AuthState.Error).message, Toast.LENGTH_SHORT).show()
-            }else -> Unit
-        }
-    }
 
     Surface(
         modifier = Modifier
@@ -69,9 +70,9 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
             // Image at the top
             Image(
                 painter = painterResource(id = R.drawable.freshplate),
-                contentDescription = "Fresh Plate",
+                contentDescription = "FreshPlate",
                 modifier = Modifier
-                    .size(300.dp) // Adjust the size of the image
+                    .size(100.dp) // Adjust the size of the image
                     .padding(top = 16.dp), // Optional padding from the top
                 contentScale = ContentScale.Fit
             )
@@ -92,12 +93,26 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    //Profile image with icon
+                    Image(
+                        painter = if (user.image?.isEmpty() == true)
+                            painterResource(id = R.drawable.baseline_person_24)
+                        else painterResource(id = R.drawable.baseline_person_24),
+                        contentDescription = "Profile Image",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape)
+                            .background(Color.Gray),
+                        contentScale = ContentScale.Crop
+                    )
+                    name = user.name.toString()
                     // Name input field with icon
                     OutlinedTextField(
                         value = name,
-                        onValueChange = { name = it },
+                        onValueChange = { user.name = it; name = it },
                         label = { Text("Name") },
-                        leadingIcon = { Icon(Icons.Filled.Person,
+                        leadingIcon = { Icon(
+                            Icons.Filled.Person,
                             contentDescription = "Name Icon") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -105,12 +120,14 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
 
                     Spacer(modifier = Modifier.height(16.dp)) // Space between fields
 
+                    surname = user.surname.toString()
                     // Surname input field with icon
                     OutlinedTextField(
                         value = surname,
-                        onValueChange = { surname = it },
+                        onValueChange = { user.surname = it; surname = it },
                         label = { Text("Surname") },
-                        leadingIcon = { Icon(Icons.Filled.Person,
+                        leadingIcon = { Icon(
+                            Icons.Filled.Person,
                             contentDescription = "Surname Icon") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -118,61 +135,48 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
 
                     Spacer(modifier = Modifier.height(16.dp)) // Space between fields
 
-                    // Email input field with icon
+                    bio = user.bio.toString()
+                    // Bio input field with icon
                     OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email") },
-                        leadingIcon = { Icon(Icons.Filled.Email, contentDescription = "Email Icon") },
+                        value = bio,
+                        onValueChange = { user.bio = it; bio = it },
+                        label = { Text("Bio") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(16.dp)) // Space between fields
+
+                    username = user.username.toString()
+                    // Username input field with icon
+                    OutlinedTextField(
+                        value = username,
+                        onValueChange = { user.username = it; username = it },
+                        label = { Text("Username") },
+                        leadingIcon = { Icon(
+                            Icons.Filled.Person,
+                            contentDescription = "Surname Icon") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp)) // Space between fields
-
-                    // Password input field with icon
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Password") },
-                        leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = "Password Icon") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation() // Hide password characters
-                    )
-
                     Spacer(modifier = Modifier.height(32.dp)) // Space before buttons
 
-                    // Sign Up button
+                    // Update button
                     Button(
                         onClick = {
                             keyboard?.hide()
                             coroutineScope.launch {
-                                    authViewModel.signup(name, surname, email, password)
+                                authViewModel.update(user)
+                                navController.navigate("profile")
                             }
                         },
                         enabled = authState.value != AuthState.Loading,
                         modifier = Modifier.fillMaxWidth() // Make the button stretch across the card width
                     ) {
-                        Text("Sign Up", fontSize = 18.sp)
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp)) // Space between Sign Up and Log In label
-
-                    // Clickable "Log In" label
-                    TextButton(onClick = {
-                        navController.navigate("login")
-                    }){
-                        Text(text = "Have you just an account? LogIn")
+                        Text("Update", fontSize = 18.sp)
                     }
                 }
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun SignUpPreview() {
-    SignUp(modifier = Modifier, navController = NavHostController(LocalContext.current), authViewModel = AuthViewModel())
 }

@@ -62,7 +62,7 @@ fun LogIn(modifier: Modifier = Modifier, navController: NavHostController, authV
                 painter = painterResource(id = R.drawable.freshplate),
                 contentDescription = "Fresh Plate",
                 modifier = Modifier
-                    .size(200.dp) // Adjust the size of the image
+                    .size(300.dp) // Adjust the size of the image
                     .padding(top = 16.dp), // Optional padding from the top
                 contentScale = ContentScale.Fit
             )

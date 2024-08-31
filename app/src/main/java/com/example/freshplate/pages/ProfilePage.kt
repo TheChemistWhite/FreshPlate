@@ -1,6 +1,5 @@
 package com.example.freshplate.pages
 
-import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -18,12 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,39 +27,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.freshplate.R
 import com.example.freshplate.authentication.AuthState
 import com.example.freshplate.authentication.AuthViewModel
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
+import com.example.freshplate.authentication.user
+import com.example.freshplate.navbar.NavigationBar
 
 @Composable
-fun ProfilePage(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
+fun ProfilePage(user: user, modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel) {
 
     val authState = authViewModel.authState.observeAsState()
-    val db = Firebase.firestore
-
-    // Mock data for now
-    var bio by remember { mutableStateOf("This is my bio.") }
-    val postsCount by remember { mutableIntStateOf(10) }
-    val followersCount by remember { mutableIntStateOf(250) }
-    val followingCount by remember { mutableIntStateOf(180) }
-    var profileImageUrl by remember { mutableStateOf("") }// Image URL from Firebase Storage
-    var username by remember { mutableStateOf("") }
-    var email = Firebase.auth.currentUser?.email
-
-    db.collection("users").whereEqualTo("email", email).get()
-        .addOnCompleteListener {
-            if (it.isSuccessful) {
-                for (document in it.result) {
-                    Log.d(TAG, "${document.id} => ${document.data}")
-                    username = document.data["username"].toString()
-                }
-            }else {
-                Log.w(TAG, "Error getting documents.", it.exception)
-            }
-        }
 
     Column(
         modifier = modifier
@@ -81,9 +53,9 @@ fun ProfilePage(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
         ) {
             // Profile Image
             Image(
-                painter = if (profileImageUrl.isEmpty())
-                    painterResource(id = R.drawable.freshplate)
-                else painterResource(id = R.drawable.freshplate),
+                painter = if (user.image?.isEmpty() == true)
+                    painterResource(id = R.drawable.baseline_person_24)
+                else painterResource(id = R.drawable.baseline_person_24),
                 contentDescription = "Profile Image",
                 modifier = Modifier
                     .size(80.dp)
@@ -92,40 +64,42 @@ fun ProfilePage(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
                 contentScale = ContentScale.Crop
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(60.dp))
 
             // User Stats (Posts, Followers, Following)
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "$postsCount", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(text = user.posts?.size.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Text(text = "Posts", fontSize = 14.sp)
             }
 
             Spacer(modifier = Modifier.width(24.dp))
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "$followersCount", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(text = user.followers?.size.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Text(text = "Followers", fontSize = 14.sp)
             }
 
             Spacer(modifier = Modifier.width(24.dp))
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "$followingCount", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(text = user.following?.size.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Text(text = "Following", fontSize = 14.sp)
             }
         }
 
-        // Username and Bio
-        Text(text = username, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        // name, surname and Bio
+        Text(text = user.email.toString(), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = bio, fontSize = 16.sp)
+        Text(text = user.name +" "+ user.surname, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = user.bio.toString(), fontSize = 16.sp)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Edit Profile Button
         Button(
             onClick = {
-                // Handle edit profile logic
+                navController.navigate("update")
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -134,12 +108,12 @@ fun ProfilePage(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
             Text("Edit Profile")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         // Logout Button
         Button(
             onClick = {
-                authViewModel.logout()
+                authViewModel.logout(user)
             },
             enabled = authState.value != AuthState.Loading,
             modifier = Modifier.fillMaxWidth()
