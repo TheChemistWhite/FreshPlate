@@ -2,13 +2,10 @@ package com.example.freshplate.navbar
 
 import android.content.ContentValues.TAG
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -21,11 +18,15 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.freshplate.Camera.CameraPage
+import com.example.freshplate.R
 import com.example.freshplate.authentication.AuthState
 import com.example.freshplate.authentication.AuthViewModel
 import com.example.freshplate.authentication.user
@@ -34,11 +35,8 @@ import com.example.freshplate.pages.LogIn
 import com.example.freshplate.pages.ProfilePage
 import com.example.freshplate.pages.SignUp
 import com.example.freshplate.pages.UpdatePage
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestore
 
 @Composable
 fun NavigationBar(modifier: Modifier, authViewModel: AuthViewModel) {
@@ -46,9 +44,9 @@ fun NavigationBar(modifier: Modifier, authViewModel: AuthViewModel) {
     val navController = rememberNavController()
 
     val navItems = listOf(
-        navItem("Home", Icons.Default.Home),
-        navItem("Settings", Icons.Default.Settings),
-        navItem("Profile", Icons.Default.Person)
+        navItem("Home", R.drawable.home),
+        navItem("Camera", R.drawable.camera),
+        navItem("Profile", R.drawable.profile)
     )
 
     var selectedIndex by remember { mutableIntStateOf(0) }
@@ -103,14 +101,18 @@ fun NavigationBar(modifier: Modifier, authViewModel: AuthViewModel) {
                                 // Only navigate if the destination exists
                                 when (index) {
                                     0 -> navController.navigate("homepage")
-                                    1 -> navController.navigate("profile")
+                                    1 -> navController.navigate("camera")
                                     2 -> navController.navigate("profile")
 
                                     else -> Unit
                                 }
                             },
                             label = { Text(item.label) },
-                            icon = { Icon(imageVector = item.icon, contentDescription = null) }
+                            icon = { Image(
+                                painter = painterResource(id = item.icon),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
+                            ) }
                         )
                     }
                 }
@@ -136,6 +138,9 @@ fun NavigationBar(modifier: Modifier, authViewModel: AuthViewModel) {
             }
             composable("update") {
                 UpdatePage(user = user, modifier = Modifier, navController = navController, authViewModel = authViewModel)
+            }
+            composable("camera") {
+                CameraPage()
             }
         }
     }
