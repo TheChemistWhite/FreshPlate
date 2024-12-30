@@ -47,7 +47,7 @@ class AuthViewModel: ViewModel() {
                 if(task.isSuccessful){
                     _authState.value = AuthState.Authenticated
                 }else{
-                    _authState.value = AuthState.Error(task.exception?.message ?: "Login failed")
+                    _authState.value = AuthState.Error(task.exception?.message ?: "Login failed! Try again.")
                 }
             }
     }

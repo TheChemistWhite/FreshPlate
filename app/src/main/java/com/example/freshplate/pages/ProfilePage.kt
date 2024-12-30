@@ -1,6 +1,5 @@
 package com.example.freshplate.pages
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -22,20 +21,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import com.example.freshplate.R
 import com.example.freshplate.authentication.AuthState
 import com.example.freshplate.authentication.AuthViewModel
 import com.example.freshplate.authentication.user
-import com.example.freshplate.navbar.NavigationBar
 
 @Composable
-fun ProfilePage(user: user, modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel) {
+fun ProfilePage(
+    user: user,
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    authViewModel: AuthViewModel
+) {
 
     val authState = authViewModel.authState.observeAsState()
 
@@ -52,10 +59,14 @@ fun ProfilePage(user: user, modifier: Modifier = Modifier, navController: NavHos
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Profile Image
+            val painter = if (user.image?.isEmpty() == true) {
+                painterResource(id = R.drawable.baseline_person_24)
+            }else {
+                rememberAsyncImagePainter(model = user.image)
+            }
+
             Image(
-                painter = if (user.image?.isEmpty() == true)
-                    painterResource(id = R.drawable.baseline_person_24)
-                else painterResource(id = R.drawable.baseline_person_24),
+                painter = painter,
                 contentDescription = "Profile Image",
                 modifier = Modifier
                     .size(80.dp)
@@ -68,21 +79,33 @@ fun ProfilePage(user: user, modifier: Modifier = Modifier, navController: NavHos
 
             // User Stats (Posts, Followers, Following)
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = user.posts?.size.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = user.posts?.size.toString(),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
                 Text(text = "Posts", fontSize = 14.sp)
             }
 
             Spacer(modifier = Modifier.width(24.dp))
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = user.followers?.size.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = user.followers?.size.toString(),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
                 Text(text = "Followers", fontSize = 14.sp)
             }
 
             Spacer(modifier = Modifier.width(24.dp))
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = user.following?.size.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = user.following?.size.toString(),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
                 Text(text = "Following", fontSize = 14.sp)
             }
         }
@@ -90,7 +113,7 @@ fun ProfilePage(user: user, modifier: Modifier = Modifier, navController: NavHos
         // name, surname and Bio
         Text(text = user.email.toString(), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = user.name +" "+ user.surname, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(text = user.name + " " + user.surname, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = user.bio.toString(), fontSize = 16.sp)
 
@@ -131,7 +154,10 @@ fun ProfilePage(user: user, modifier: Modifier = Modifier, navController: NavHos
                 .fillMaxSize()
                 .background(Color.LightGray)
         ) {
-            Text(text = "User's posts will be displayed here", modifier = Modifier.align(Alignment.Center))
+            Text(
+                text = "User's posts will be displayed here",
+                modifier = Modifier.align(Alignment.Center)
+            )
         }
     }
 }

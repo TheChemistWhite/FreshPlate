@@ -162,7 +162,7 @@ fun NavigationBarPreview(user: user, modifier: Modifier = Modifier, navControlle
     if (authState.value == AuthState.Authenticated) {
         when (selectedIndex) {
             0 -> HomePage(modifier, authViewModel)
-            1 -> ProfilePage(user, modifier, navController, authViewModel)
+            1 -> CameraPage()
             2 -> ProfilePage(user, modifier, navController, authViewModel)
         }
     }

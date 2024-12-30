@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.example.freshplate"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.freshplate"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -82,6 +82,11 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation (libs.play.services.auth)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation ("com.google.android.gms:play-services-location:21.3.0")
+    implementation(libs.coil.compose)
+
 
     implementation (libs.guava)
 

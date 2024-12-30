@@ -1,7 +1,18 @@
 package com.example.freshplate.pages
 
+import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -32,34 +44,82 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
+import com.example.freshplate.Camera.Camera
 import com.example.freshplate.R
 import com.example.freshplate.authentication.AuthState
 import com.example.freshplate.authentication.AuthViewModel
 import com.example.freshplate.authentication.user
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
 @Composable
-fun UpdatePage(user: user, modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel){
+fun UpdatePage(
+    user: user,
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    authViewModel: AuthViewModel
+) {
 
     var name by remember { mutableStateOf("") }
     var surname by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
+    var selectedImageUri: Uri? by remember { mutableStateOf(null) }
 
     val authState = authViewModel.authState.observeAsState()
+    val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
-    val coroutineScope = rememberCoroutineScope() // Define coroutine scope
+    val coroutineScope = rememberCoroutineScope()
+    val storage = FirebaseStorage.getInstance()
+    val storageRef = storage.reference
+
+    // Gallery launcher
+    val galleryLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let {
+                selectedImageUri = it
+                coroutineScope.launch {
+                    // Upload the image to Firebase Storage
+                    try {
+                        val fileName = "profile_images/${UUID.randomUUID()}.jpg"
+                        val imageRef = storageRef.child(fileName)
+                        val uploadTask = imageRef.putFile(it).await() // Upload file
+
+                        // Get download URL
+                        val downloadUrl = imageRef.downloadUrl.await()
+
+                        // Save URL in Firestore
+                        user.image = downloadUrl.toString()
+                        authViewModel.update(user) // Custom function to update the Firestore document
+                        Toast.makeText(context, "Image uploaded successfully", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(
+                            context,
+                            "Image upload failed: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        }
 
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .padding(0.dp) // Add padding to the whole screen
+            .padding(0.dp)
     ) {
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -72,37 +132,45 @@ fun UpdatePage(user: user, modifier: Modifier = Modifier, navController: NavHost
                 painter = painterResource(id = R.drawable.freshplate),
                 contentDescription = "FreshPlate",
                 modifier = Modifier
-                    .size(100.dp) // Adjust the size of the image
-                    .padding(top = 16.dp), // Optional padding from the top
+                    .size(300.dp)
+                    .padding(top = 6.dp),
                 contentScale = ContentScale.Fit
             )
 
-            Spacer(modifier = Modifier.height(24.dp)) // Space between image and card
+            Spacer(modifier = Modifier.height(0.dp))
 
             // Card to wrap inputs and buttons
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Adding elevation to give a card look
-                colors = CardDefaults.cardColors(containerColor = Color.White) // Card background set to white
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(16.dp) // Padding inside the card
+                        .padding(16.dp)
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     //Profile image with icon
+                    val painter = if (user.image?.isEmpty() == true) {
+                        painterResource(id = R.drawable.baseline_person_24)
+                    } else {
+                        rememberAsyncImagePainter(model = user.image)
+                    }
+
                     Image(
-                        painter = if (user.image?.isEmpty() == true)
-                            painterResource(id = R.drawable.baseline_person_24)
-                        else painterResource(id = R.drawable.baseline_person_24),
+                        painter = painter,
                         contentDescription = "Profile Image",
                         modifier = Modifier
                             .size(80.dp)
                             .clip(CircleShape)
-                            .background(Color.Gray),
+                            .background(Color.Gray)
+                            .clickable {
+                                galleryLauncher.launch("image/*")
+                            },
+
                         contentScale = ContentScale.Crop
                     )
                     name = user.name.toString()
@@ -111,14 +179,17 @@ fun UpdatePage(user: user, modifier: Modifier = Modifier, navController: NavHost
                         value = name,
                         onValueChange = { user.name = it; name = it },
                         label = { Text("Name") },
-                        leadingIcon = { Icon(
-                            Icons.Filled.Person,
-                            contentDescription = "Name Icon") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Filled.Person,
+                                contentDescription = "Name Icon"
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp)) // Space between fields
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     surname = user.surname.toString()
                     // Surname input field with icon
@@ -126,14 +197,17 @@ fun UpdatePage(user: user, modifier: Modifier = Modifier, navController: NavHost
                         value = surname,
                         onValueChange = { user.surname = it; surname = it },
                         label = { Text("Surname") },
-                        leadingIcon = { Icon(
-                            Icons.Filled.Person,
-                            contentDescription = "Surname Icon") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Filled.Person,
+                                contentDescription = "Surname Icon"
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp)) // Space between fields
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     bio = user.bio.toString()
                     // Bio input field with icon
@@ -144,7 +218,7 @@ fun UpdatePage(user: user, modifier: Modifier = Modifier, navController: NavHost
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
-                    Spacer(modifier = Modifier.height(16.dp)) // Space between fields
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     username = user.username.toString()
                     // Username input field with icon
@@ -152,14 +226,17 @@ fun UpdatePage(user: user, modifier: Modifier = Modifier, navController: NavHost
                         value = username,
                         onValueChange = { user.username = it; username = it },
                         label = { Text("Username") },
-                        leadingIcon = { Icon(
-                            Icons.Filled.Person,
-                            contentDescription = "Surname Icon") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Filled.Person,
+                                contentDescription = "Surname Icon"
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
 
-                    Spacer(modifier = Modifier.height(32.dp)) // Space before buttons
+                    Spacer(modifier = Modifier.height(32.dp))
 
                     // Update button
                     Button(
@@ -171,7 +248,7 @@ fun UpdatePage(user: user, modifier: Modifier = Modifier, navController: NavHost
                             }
                         },
                         enabled = authState.value != AuthState.Loading,
-                        modifier = Modifier.fillMaxWidth() // Make the button stretch across the card width
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Update", fontSize = 18.sp)
                     }
