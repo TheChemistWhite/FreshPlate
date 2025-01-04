@@ -21,12 +21,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -76,6 +78,7 @@ fun UpdatePage(
     var bio by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var selectedImageUri: Uri? by remember { mutableStateOf(null) }
+    var showProgressDialog by remember { mutableStateOf(false) }
 
     val authState = authViewModel.authState.observeAsState()
     val context = LocalContext.current
@@ -94,15 +97,33 @@ fun UpdatePage(
                     try {
                         val fileName = "profile_images/${UUID.randomUUID()}.jpg"
                         val imageRef = storageRef.child(fileName)
-                        val uploadTask = imageRef.putFile(it).await() // Upload file
+                        val uploadTask = imageRef.putFile(it).await()
+                        val previousImageUrl = user.image
 
                         // Get download URL
                         val downloadUrl = imageRef.downloadUrl.await()
 
                         // Save URL in Firestore
                         user.image = downloadUrl.toString()
-                        authViewModel.update(user) // Custom function to update the Firestore document
-                        Toast.makeText(context, "Image uploaded successfully", Toast.LENGTH_SHORT).show()
+                        showProgressDialog = true
+                        if (!previousImageUrl.isNullOrEmpty()) {
+                            try {
+                                val previousImageRef = storage.getReferenceFromUrl(previousImageUrl)
+                                previousImageRef.delete().await()
+                                showProgressDialog = false
+                                Toast.makeText(
+                                    context,
+                                    "Image uploaded successfully",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    context,
+                                    "Failed to delete previous image: ${e.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
                     } catch (e: Exception) {
                         Toast.makeText(
                             context,
@@ -254,6 +275,13 @@ fun UpdatePage(
                     }
                 }
             }
+        }
+        if (showProgressDialog) {
+            CircularProgressIndicator(
+                color = Color.White,
+                strokeWidth = 4.dp,
+                modifier = Modifier.wrapContentSize(Alignment.Center).size(50.dp)
+            )
         }
     }
 }
