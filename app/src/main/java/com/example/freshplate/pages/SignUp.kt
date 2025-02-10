@@ -41,7 +41,7 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
     val authState = authViewModel.authState.observeAsState()
     val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
-    val coroutineScope = rememberCoroutineScope() // Define coroutine scope
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(authState.value){
         when(authState.value){
@@ -57,7 +57,7 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .padding(0.dp) // Add padding to the whole screen
+            .padding(0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -66,19 +66,17 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            // Image at the top
             Image(
                 painter = painterResource(id = R.drawable.freshplate),
                 contentDescription = "Fresh Plate",
                 modifier = Modifier
-                    .size(300.dp) // Adjust the size of the image
-                    .padding(top = 16.dp), // Optional padding from the top
+                    .size(300.dp)
+                    .padding(top = 16.dp),
                 contentScale = ContentScale.Fit
             )
 
-            Spacer(modifier = Modifier.height(24.dp)) // Space between image and card
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Card to wrap inputs and buttons
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -92,7 +90,7 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Name input field with icon
+
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
@@ -103,9 +101,8 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
                         singleLine = true
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp)) // Space between fields
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    // Surname input field with icon
                     OutlinedTextField(
                         value = surname,
                         onValueChange = { surname = it },
@@ -116,7 +113,7 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
                         singleLine = true
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp)) // Space between fields
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Email input field with icon
                     OutlinedTextField(
@@ -128,7 +125,7 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
                         singleLine = true
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp)) // Space between fields
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Password input field with icon
                     OutlinedTextField(
@@ -138,12 +135,11 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
                         leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = "Password Icon") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        visualTransformation = PasswordVisualTransformation() // Hide password characters
+                        visualTransformation = PasswordVisualTransformation()
                     )
 
-                    Spacer(modifier = Modifier.height(32.dp)) // Space before buttons
+                    Spacer(modifier = Modifier.height(32.dp))
 
-                    // Sign Up button
                     Button(
                         onClick = {
                             keyboard?.hide()
@@ -152,14 +148,13 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
                             }
                         },
                         enabled = authState.value != AuthState.Loading,
-                        modifier = Modifier.fillMaxWidth() // Make the button stretch across the card width
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Sign Up", fontSize = 18.sp)
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp)) // Space between Sign Up and Log In label
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    // Clickable "Log In" label
                     TextButton(onClick = {
                         navController.navigate("login")
                     }){

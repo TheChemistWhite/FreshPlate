@@ -8,7 +8,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
 
-class AuthViewModel: ViewModel() {
+class AuthViewModel : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val _authState = MutableLiveData<AuthState>()
@@ -20,22 +20,22 @@ class AuthViewModel: ViewModel() {
         checkAuthStatus()
     }
 
-    private fun checkAuthStatus(){
-        if(auth.currentUser != null){
+    private fun checkAuthStatus() {
+        if (auth.currentUser != null) {
             _authState.value = AuthState.Authenticated
-        }else{
+        } else {
             _authState.value = AuthState.UnAuthenticated
         }
     }
 
-    fun login(email: String, password: String){
+    fun login(email: String, password: String) {
 
-        if(email.isEmpty()){
+        if (email.isEmpty()) {
             _authState.value = AuthState.Error("Email cannot be empty")
             return
         }
 
-        if(password.isEmpty()){
+        if (password.isEmpty()) {
             _authState.value = AuthState.Error("Password cannot be empty")
             return
         }
@@ -44,36 +44,42 @@ class AuthViewModel: ViewModel() {
 
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
-                if(task.isSuccessful){
+                if (task.isSuccessful) {
                     _authState.value = AuthState.Authenticated
-                }else{
-                    _authState.value = AuthState.Error(task.exception?.message ?: "Login failed! Try again.")
+                } else {
+                    val errorMessage = when {
+                        task.exception?.message?.contains("blocked") == true ->
+                            "Your app is blocked. Ensure Firebase reCAPTCHA and App Check are set up."
+
+                        else -> task.exception?.message ?: "Login failed! Try again."
+                    }
+                    _authState.value = AuthState.Error(errorMessage)
                 }
             }
     }
 
-    fun signup(name: String, surname: String, email: String, password: String){
+    fun signup(name: String, surname: String, email: String, password: String) {
 
-        if(email.isEmpty()){
+        if (email.isEmpty()) {
             _authState.value = AuthState.Error("Email cannot be empty")
             return
         }
 
-        if(password.isEmpty()){
+        if (password.isEmpty()) {
             _authState.value = AuthState.Error("Password cannot be empty")
             return
         }
-        if(password.length < 6){
+        if (password.length < 6) {
             _authState.value = AuthState.Error("Password must be at least 6 characters long")
             return
         }
 
-        if(name.isEmpty()){
+        if (name.isEmpty()) {
             _authState.value = AuthState.Error("Username cannot be empty")
             return
         }
 
-        if(surname.isEmpty()){
+        if (surname.isEmpty()) {
             _authState.value = AuthState.Error("Username cannot be empty")
             return
         }
@@ -92,7 +98,7 @@ class AuthViewModel: ViewModel() {
         )
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
-                if(task.isSuccessful){
+                if (task.isSuccessful) {
                     _authState.value = AuthState.Authenticated
                     db.collection("users")
                         .document(auth.currentUser!!.uid)
@@ -101,13 +107,15 @@ class AuthViewModel: ViewModel() {
                         }.addOnFailureListener {
                             Log.w("TAG", "Error adding user", it)
                         }
-                }else{
-                    _authState.value = AuthState.Error(task.exception?.message ?: "Registration failed")
+                } else {
+                    _authState.value =
+                        AuthState.Error(task.exception?.message ?: "Registration failed")
                 }
             }
     }
 
-    fun logout(user: user){
+    fun logout(user: user) {
+        auth.signOut()
         user.name = ""
         user.surname = ""
         user.email = ""
@@ -117,24 +125,23 @@ class AuthViewModel: ViewModel() {
         user.posts = listOf()
         user.followers = listOf()
         user.following = listOf()
-        auth.signOut()
         _authState.value = AuthState.UnAuthenticated
     }
 
-    fun update(user: user){
+    fun update(user: user) {
 
-        if(user.name?.isEmpty() == true){
+        if (user.name?.isEmpty() == true) {
             _authState.value = AuthState.Error("Username cannot be empty")
             return
         }
 
-        if(user.surname?.isEmpty() == true){
+        if (user.surname?.isEmpty() == true) {
             _authState.value = AuthState.Error("Username cannot be empty")
             return
         }
         _authState.value = AuthState.Loading
         db.collection("users").document(auth.currentUser!!.uid)
-                .update(
+            .update(
                 mapOf(
                     "name" to user.name,
                     "surname" to user.surname,
@@ -143,10 +150,10 @@ class AuthViewModel: ViewModel() {
                     "image" to user.image
                 )
             ).addOnCompleteListener {
-                if(it.isSuccessful) {
+                if (it.isSuccessful) {
                     Log.d("TAG", "User updated")
                     _authState.value = AuthState.Authenticated
-                }else{
+                } else {
                     _authState.value = AuthState.Error(it.exception?.message ?: "Update failed")
                 }
             }.addOnFailureListener {
@@ -156,10 +163,10 @@ class AuthViewModel: ViewModel() {
 
 }
 
-sealed class AuthState{
-    data object Authenticated: AuthState()
-    data object UnAuthenticated: AuthState()
-    data object Loading:AuthState()
+sealed class AuthState {
+    data object Authenticated : AuthState()
+    data object UnAuthenticated : AuthState()
+    data object Loading : AuthState()
 
-    data class Error(val message: String): AuthState()
+    data class Error(val message: String) : AuthState()
 }
