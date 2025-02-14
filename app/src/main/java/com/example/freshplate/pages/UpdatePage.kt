@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
+import com.example.freshplate.Components.LoadingLogo
 import com.example.freshplate.R
 import com.example.freshplate.authentication.AuthState
 import com.example.freshplate.authentication.AuthViewModel
@@ -267,11 +269,18 @@ fun UpdatePage(
             }
         }
         if (showProgressDialog) {
-            CircularProgressIndicator(
-                color = Color.White,
-                strokeWidth = 4.dp,
-                modifier = Modifier.wrapContentSize(Alignment.Center).size(50.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.7f)),
+                contentAlignment = Alignment.Center
+            ) {
+                LoadingLogo(
+                    modifier = Modifier
+                        .size(300.dp)
+                        .background(Color.Black)
+                )
+            }
         }
     }
 }

@@ -43,6 +43,7 @@ import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.freshplate.API.Ingredient
 import com.example.freshplate.API.RecipeResponse
+import com.example.freshplate.Components.LoadingLogo
 import com.example.freshplate.Components.UserPost
 import com.example.freshplate.R
 import com.example.freshplate.authentication.AuthState
@@ -244,10 +245,16 @@ fun ProfilePage(
         )
         if (isLoading) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.7f)),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                LoadingLogo(
+                    modifier = Modifier
+                        .size(300.dp)
+                        .background(Color.Black)
+                )
             }
         } else if (userPosts.isEmpty()) {
             Box(

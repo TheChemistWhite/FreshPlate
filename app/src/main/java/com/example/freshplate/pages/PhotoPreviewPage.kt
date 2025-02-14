@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,6 +23,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.freshplate.API.RecipeRequest
 import com.example.freshplate.API.RecipeViewModel
 import com.example.freshplate.API.RetrofitClient
+import com.example.freshplate.Components.LoadingLogo
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.FirebaseStorage
@@ -172,10 +174,18 @@ fun PhotoPreviewPage(
                 enabled = !isLoading
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.7f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        LoadingLogo(
+                            modifier = Modifier
+                                .size(300.dp)
+                                .background(Color.Black)
+                        )
+                    }
                 } else {
                     Text(text = "Analyze")
                 }

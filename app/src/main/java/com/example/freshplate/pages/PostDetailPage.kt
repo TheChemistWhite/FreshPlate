@@ -50,6 +50,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.freshplate.API.Ingredient
 import com.example.freshplate.API.RecipeResponse
 import com.example.freshplate.Components.IngredientItem
+import com.example.freshplate.Components.LoadingLogo
 import com.example.freshplate.Components.UserPost
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -186,9 +187,18 @@ fun PostDetailPage(
         ) {
             when {
                 isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.7f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        LoadingLogo(
+                            modifier = Modifier
+                                .size(300.dp)
+                                .background(Color.Black)
+                        )
+                    }
                 }
                 error != null -> {
                     Column(

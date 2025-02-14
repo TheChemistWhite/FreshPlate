@@ -57,6 +57,7 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import com.example.freshplate.Components.IngredientItem
+import com.example.freshplate.Components.LoadingLogo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -338,10 +339,14 @@ fun RecipeResultPage(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.5f)),
+                        .background(Color.Black.copy(alpha = 0.7f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = Color.White)
+                    LoadingLogo(
+                        modifier = Modifier
+                            .size(300.dp)
+                            .background(Color.Black)
+                    )
                 }
             }
 

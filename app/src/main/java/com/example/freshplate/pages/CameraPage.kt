@@ -59,6 +59,7 @@ import com.example.freshplate.Camera.CameraPreview
 import com.example.freshplate.Camera.MainViewModel
 import com.example.freshplate.Camera.PhotoBottomSheetContent
 import com.example.freshplate.Camera.PhotoViewModel
+import com.example.freshplate.Components.LoadingLogo
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
@@ -207,12 +208,13 @@ fun CameraPage(navController: NavHostController, photoViewModel: PhotoViewModel,
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.6f)),
+                        .background(Color.Black.copy(alpha = 0.7f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(48.dp)
+                    LoadingLogo(
+                        modifier = Modifier
+                            .size(300.dp)
+                            .background(Color.Black)
                     )
                 }
             }
